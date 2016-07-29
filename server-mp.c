@@ -17,8 +17,8 @@ int main(int argc, char *argv[])
     char buffer[256];
     struct sockaddr_in serv_addr, cli_addr;
     int n;
-    if (argc < 2) {
-        fprintf(stderr,"ERROR, no port provided\n");
+    if (argc < 2 || argc > 2) {
+        fprintf(stderr,"usage :  %s [port]\n", argv[0]);
         exit(1);
     }
 
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 
     /* fill in port number to listen on. IP address can be anything (INADDR_ANY) */
 
-    bzero((char *) &serv_addr, sizeof(serv_addr));
+    bzero((char*)&serv_addr, sizeof(serv_addr));
     portno = atoi(argv[1]);
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -38,9 +38,8 @@ int main(int argc, char *argv[])
 
     /* bind socket to this port number on this machine */
 
-    if (bind(sockfd, (struct sockaddr *) &serv_addr,
-            sizeof(serv_addr)) < 0) 
-        error("ERROR on binding");
+    if (bind(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) 
+    error("ERROR on binding");
     
     /* listen for incoming connection requests */
 
@@ -49,36 +48,33 @@ int main(int argc, char *argv[])
 
     /* accept a new request, create a newsockfd */
 
-    newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+    newsockfd = accept(sockfd, (struct sockaddr*)&cli_addr, &clilen);
     if (newsockfd < 0) 
         error("ERROR on accept");
 
     /* read message from client */
 
-    bzero(buffer,256);
-    n = read(newsockfd,buffer,255);
+    bzero(buffer, 256);
+    n = read(newsockfd, buffer, 255);
     if (n < 0) error("ERROR reading from socket");
     
-    char* filename = calloc(1,strlen(buffer)-4);
-    memcpy(filename,buffer+4,strlen(buffer)-5);
-    //char* filename = "makefile";
-   // printf("%s %d %d",filename,strlen(filename),strlen(buffer));
+    char* filename = calloc(1, strlen(buffer) - 4);
+    memcpy(filename, buffer + 4, strlen(buffer) - 5);
+
     FILE *fp = fopen(filename,"r");
     //printf("%s",filename);
 
     if(fp == NULL)
-    {
-    	error("File not found");
-    }
+    	error("ERROR file not found");
 
     printf("%s",filename);
 
     while(1)
     {
-    	int bytes_read = fread(buffer, sizeof(char),sizeof(buffer),fp);
+    	int bytes_read = fread(buffer, sizeof(char), sizeof(buffer), fp);
     	if(bytes_read > 0)
     	{
-    		n = send(newsockfd,buffer,bytes_read,0);
+    		n = send(newsockfd, buffer, bytes_read, 0);
     		if (n < bytes_read) 
     			error("ERROR writing to socket");
     	}
@@ -89,7 +85,7 @@ int main(int argc, char *argv[])
     	}
     	if(bytes_read < 0)
     	{
-    		error("Error reading from file");
+    		error("ERROR reading from file");
     	}
     }
 

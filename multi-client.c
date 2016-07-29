@@ -18,8 +18,8 @@ int main(int argc, char *argv[])
     struct hostent *server;
 
     char buffer[256];
-    if (argc < 3) {
-       fprintf(stderr,"usage %s hostname port\n", argv[0]);
+    if (argc < 3 || argc > 3) {
+       fprintf(stderr, "usage :  %s [host] [port]\n", argv[0]);
        exit(0);
     }
 
@@ -34,44 +34,44 @@ int main(int argc, char *argv[])
 
     server = gethostbyname(argv[1]);
     if (server == NULL) {
-        fprintf(stderr,"ERROR, no such host\n");
+        fprintf(stderr, "ERROR, no such host\n");
         exit(0);
     }
-    bzero((char *) &serv_addr, sizeof(serv_addr));
+
+    bzero((char*)&serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, 
-         (char *)&serv_addr.sin_addr.s_addr,
-         server->h_length);
+
+    bcopy((char*)server->h_addr, (char*)&serv_addr.sin_addr.s_addr, server->h_length);
     serv_addr.sin_port = htons(portno);
 
     /* connect to server */
 
-    if (connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0) 
+    if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) 
         error("ERROR connecting");
 
     /* ask user for input */
 
     printf("Please enter the message: ");
-    bzero(buffer,256);
-    fgets(buffer,255,stdin);
+    bzero(buffer, 256);
+    fgets(buffer, 255, stdin);
 
     /* send user message to server */
 
-    int bytes_sent = write(sockfd,buffer,strlen(buffer));
+    int bytes_sent = write(sockfd, buffer, strlen(buffer));
     if (bytes_sent < 0) 
          error("ERROR writing to socket");
-    bzero(buffer,256);
+    bzero(buffer, 256);
 
     /* read reply from server */
     FILE *fp;
-    fp = fopen("recv.txt","w+");
+    fp = fopen("recv.txt", "w+");
     if(fp == NULL)
     {
         error("Error opening file to write");
     }
     while(1)
     {
-        int bytes_recv = recv(sockfd,buffer,sizeof(buffer),0);
+        int bytes_recv = recv(sockfd, buffer, sizeof(buffer), 0);
         
         if (bytes_recv < 0) 
             error("ERROR reading from socket");
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            fwrite(buffer,sizeof(char),bytes_recv,fp);
+            fwrite(buffer, sizeof(char), bytes_recv, fp);
         }
     }
     return 0;
