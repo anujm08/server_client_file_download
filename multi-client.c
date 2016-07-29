@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 
     int bytes_sent = write(sockfd, buffer, strlen(buffer));
     if (bytes_sent < 0) 
-         error("ERROR writing to socket\n");
+        error("ERROR writing to socket\n");
     bzero(buffer, 256);
 
     while(1)

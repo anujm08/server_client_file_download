@@ -11,6 +11,49 @@ void error(char *msg)
     exit(1);
 }
 
+void serveFile(int sock)
+{
+	char buffer[256];
+	bzero(buffer, 256);
+    int bytes_read = read(sock, buffer, 255);
+    if (bytes_read < 0)
+    	error("ERROR reading from socket\n");
+    
+    char* filename = calloc(1, strlen(buffer) - 4);
+    memcpy(filename, buffer + 4, strlen(buffer) - 5);
+
+    FILE *fp = fopen(filename,"r");
+    //printf("%s",filename);
+
+    if(fp == NULL)
+    	error("ERROR file not found\n");
+
+    printf("Sending file %s to client %d\n", filename,sock);
+
+    while(1)
+    {
+    	int bytes_read = fread(buffer, sizeof(char), sizeof(buffer), fp);
+    	if(bytes_read > 0)
+    	{
+    		int bytes_sent = send(sock, buffer, bytes_read, 0);
+    		if (bytes_sent < bytes_read) 
+    			error("ERROR writing to socket\n");
+    	}
+    	if(bytes_read == 0)
+    	{
+    		printf("File %s successfully sent to client %d\n",filename,sock);
+    		fclose(fp);
+    		break;
+    	}
+    	if(bytes_read < 0)
+    	{
+    		error("ERROR reading from file\n");
+    	}
+    }
+    close(sock);
+    exit(0);
+}
+
 int main(int argc, char *argv[])
 {
     int sockfd, newsockfd, portno, clilen;
@@ -43,51 +86,34 @@ int main(int argc, char *argv[])
     
     /* listen for incoming connection requests */
 
+
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
     /* accept a new request, create a newsockfd */
 
-    newsockfd = accept(sockfd, (struct sockaddr*)&cli_addr, &clilen);
-    if (newsockfd < 0) 
-        error("ERROR on accept\n");
-    printf("Client %d connected\n", newsockfd);
+	while (1)
+	{
+	    newsockfd = accept(sockfd, (struct sockaddr*)&cli_addr, &clilen);
+	    if (newsockfd < 0) 
+	        error("ERROR on accept\n");
+	    printf("Client %d connected\n", newsockfd);
 
-    /* read message from client */
+	    int pid = fork();
 
-    bzero(buffer, 256);
-    n = read(newsockfd, buffer, 255);
-    if (n < 0) error("ERROR reading from socket\n");
-    
-    char* filename = calloc(1, strlen(buffer) - 4);
-    memcpy(filename, buffer + 4, strlen(buffer) - 5);
-
-    FILE *fp = fopen(filename,"r");
-    //printf("%s",filename);
-
-    if(fp == NULL)
-    	error("ERROR file not found\n");
-
-    printf("%s", filename);
-
-    while(1)
-    {
-    	int bytes_read = fread(buffer, sizeof(char), sizeof(buffer), fp);
-    	if(bytes_read > 0)
-    	{
-    		n = send(newsockfd, buffer, bytes_read, 0);
-    		if (n < bytes_read) 
-    			error("ERROR writing to socket\n");
-    	}
-    	if(bytes_read == 0)
-    	{
-    		fclose(fp);
-    		break;
-    	}
-    	if(bytes_read < 0)
-    	{
-    		error("ERROR reading from file\n");
-    	}
-    }
+	    if (pid < 0)
+	    {
+	    	error("Cannot fork new process");
+	    }
+	    if(pid == 0)
+	    {
+	    	close(sockfd);
+	    	serveFile(newsockfd);
+	    }
+	    else
+	    {
+	    	close(newsockfd);
+	    }
+	}
 
     return 0; 
 }
