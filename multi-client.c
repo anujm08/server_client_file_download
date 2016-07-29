@@ -62,13 +62,6 @@ int main(int argc, char *argv[])
          error("ERROR writing to socket");
     bzero(buffer, 256);
 
-    /* read reply from server */
-    FILE *fp;
-    fp = fopen("recv.txt", "w+");
-    if(fp == NULL)
-    {
-        error("Error opening file to write");
-    }
     while(1)
     {
         int bytes_recv = recv(sockfd, buffer, sizeof(buffer), 0);
@@ -77,13 +70,8 @@ int main(int argc, char *argv[])
             error("ERROR reading from socket");
         if (bytes_recv == 0)
         {
-            fclose(fp);
-            printf("Download successful");
+            printf("File received");
             break;
-        }
-        else
-        {
-            fwrite(buffer, sizeof(char), bytes_recv, fp);
         }
     }
     return 0;

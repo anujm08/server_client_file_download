@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     
     /* listen for incoming connection requests */
 
-    listen(sockfd,5);
+    listen(sockfd, 5);
     clilen = sizeof(cli_addr);
 
     /* accept a new request, create a newsockfd */
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     if(fp == NULL)
     	error("ERROR file not found");
 
-    printf("%s",filename);
+    printf("%s", filename);
 
     while(1)
     {
