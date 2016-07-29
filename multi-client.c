@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     portno = atoi(argv[2]);
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
-        error("ERROR opening socket");
+        error("ERROR opening socket\n");
 
     /* fill in server address in sockaddr_in datastructure */
 
@@ -47,10 +47,10 @@ int main(int argc, char *argv[])
     /* connect to server */
 
     if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) 
-        error("ERROR connecting");
+        error("ERROR connecting\n");
+    printf("A client connected to the server\n", sockfd);
 
-    /* ask user for input */
-
+    /* temporary get user input */
     printf("Please enter the message: ");
     bzero(buffer, 256);
     fgets(buffer, 255, stdin);
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 
     int bytes_sent = write(sockfd, buffer, strlen(buffer));
     if (bytes_sent < 0) 
-         error("ERROR writing to socket");
+         error("ERROR writing to socket\n");
     bzero(buffer, 256);
 
     while(1)
@@ -67,10 +67,10 @@ int main(int argc, char *argv[])
         int bytes_recv = recv(sockfd, buffer, sizeof(buffer), 0);
         
         if (bytes_recv < 0) 
-            error("ERROR reading from socket");
+            error("ERROR reading from socket\n");
         if (bytes_recv == 0)
         {
-            printf("File received");
+            printf("File received\n");
             break;
         }
     }
