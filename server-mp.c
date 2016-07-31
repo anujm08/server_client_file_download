@@ -22,13 +22,13 @@ void serveFile(int sock)
     char* filename = calloc(1, strlen(buffer) - 4);
     memcpy(filename, buffer + 4, strlen(buffer) - 5);
 
-    FILE *fp = fopen(filename,"r");
+    FILE *fp = fopen(filename, "r");
     //printf("%s",filename);
 
     if(fp == NULL)
     	error("ERROR file not found\n");
 
-    printf("Sending file %s to client %d\n", filename,sock);
+    printf("Sending file %s to client %d\n", filename, sock);
 
     while(1)
     {
