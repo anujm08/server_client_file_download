@@ -56,7 +56,7 @@ void serveFile(int sock)
 
 int main(int argc, char *argv[])
 {
-    int sockfd, newsockfd, portno, clilen;
+    int sockfd, newsockfd, portno, clilen, yes = 1;
     char buffer[256];
     struct sockaddr_in serv_addr, cli_addr;
     int n;
@@ -68,7 +68,8 @@ int main(int argc, char *argv[])
     /* create socket */
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) 
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+    if (sockfd <= 0) 
         error("ERROR opening socket\n");
 
     /* fill in port number to listen on. IP address can be anything (INADDR_ANY) */

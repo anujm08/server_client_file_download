@@ -16,13 +16,14 @@ void error(char *msg)
 
 void getFile()
 {
-    int sockfd;
+    int sockfd, yes = 1;
     char buffer[256];
     struct sockaddr_in serv_addr;
 
     /* create socket, get sockfd handle */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) 
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+    if (sockfd <= 0) 
         error("ERROR opening socket\n");
 
     bzero((char*)&serv_addr, sizeof(serv_addr));
