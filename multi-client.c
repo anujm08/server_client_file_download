@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
+#include <pthread.h>
 
 static int portno;
 static struct hostent *server;
@@ -12,7 +13,6 @@ void error(char *msg)
     perror(msg);
     exit(0);
 }
-
 
 void getFile()
 {
@@ -77,7 +77,16 @@ int main(int argc, char *argv[])
     if (server == NULL)
         error("ERROR no such host\n");
 
-    getFile();
+    int NUM_THREADS = 3;
+    pthread_t *tid = malloc(NUM_THREADS * sizeof(pthread_t));
+
+    for(int i = 0; i < NUM_THREADS; i++) 
+        // second NULL is for giving arguments to getFile
+        pthread_create(&tid[i], NULL, getFile, NULL);
+
+    for(int i = 0; i < NUM_THREADS; i++) 
+        //change NULL for getting back return values
+        pthread_join(tid[i], NULL);
 
     return 0;
 }

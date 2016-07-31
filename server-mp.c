@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 
 	    if (pid < 0)
 	    {
-	    	error("Cannot fork new process");
+	    	error("ERROR could not fork new process");
 	    }
 	    if(pid == 0)
 	    {
@@ -112,6 +112,7 @@ int main(int argc, char *argv[])
 	    }
 	    else
 	    {
+            // shouldn't it wait for children here?
 	    	close(newsockfd);
 	    }
 	}
