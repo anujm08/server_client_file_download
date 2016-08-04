@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 	    {
 	    	error("ERROR could not fork new process\n");
 	    }
-	    if(pid == 0)
+	    if (pid == 0)
 	    {
 	    	close(sockfd);
 	    	serveFile(newsockfd);
@@ -122,9 +122,8 @@ int main(int argc, char *argv[])
             // NULL is for getting argument for status
             while (waitpid(-1, NULL , WNOHANG)>0)
         	{
-        		printf("Child process terminated\n");
+        		printf("A child process terminated\n");
         	}
-	    	
 	    	close(newsockfd);
 	    }
 	}

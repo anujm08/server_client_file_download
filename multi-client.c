@@ -22,7 +22,7 @@ void error(char *msg)
     exit(0);
 }
 
-void getFile()
+void getFile(int seed)
 {
     int sockfd, yes = 1;
     char buffer[256];
@@ -53,9 +53,8 @@ void getFile()
             sprintf(buffer, "get %s", FIXED_FILE);
         else
         {
-            
-            int file_num = rand() % NUM_FILES;
-            sprintf(buffer, "get files/foo%d.txt",file_num);
+            int file_num = rand_r(seed) % NUM_FILES;
+            sprintf(buffer, "get files/foo%d.txt", file_num);
         }
 
         /* send user message to server */
@@ -88,13 +87,15 @@ int main(int argc, char *argv[])
        exit(0);
     }
 
+    int seed = time(NULL);
+
     // TODO : sanity checks
     PORT = atoi(argv[2]);
     NUM_THREADS = atoi(argv[3]);
     RUN_TIME = atoi(argv[4]);
     SLEEP_TIME = atoi(argv[5]);
     MODE = (char*)malloc(strlen(argv[6]));
-    strncpy(MODE, argv[6],strlen(argv[6]));
+    strncpy(MODE, argv[6], strlen(argv[6]));
 
     // server    
     server = gethostbyname(argv[1]);
@@ -105,7 +106,7 @@ int main(int argc, char *argv[])
 
     for(int i = 0; i < NUM_THREADS; i++) 
         // second NULL is for giving arguments to getFile
-        pthread_create(&tid[i], NULL, getFile, NULL);
+        pthread_create(&tid[i], NULL, getFile, seed*i);
 
     for(int i = 0; i < NUM_THREADS; i++) 
         //change NULL for getting back return values
