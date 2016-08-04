@@ -75,6 +75,7 @@ void getFile()
 
 int main(int argc, char *argv[])
 {
+    // TODO : Handle mode : random or fixed
     if (argc < 6 || argc > 6) {
        fprintf(stderr, "usage :  %s [host] [port] [num-threads] [run time] [sleep time]\n", argv[0]);
        exit(0);

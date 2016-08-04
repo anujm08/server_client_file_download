@@ -1,6 +1,7 @@
 /* A simple server in the internet domain using TCP
    The port number is passed as an argument */
 #include <stdio.h>
+#include <sys/wait.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -14,7 +15,10 @@ void error(char *msg)
 void serveFile(int sock)
 {
 	char buffer[256];
-	bzero(buffer, 256);
+	//TODO : change the block size of reading
+	bzero(buffer, 256); 
+    
+	/* Read file requesst from client */
     int bytes_read = read(sock, buffer, 255);
     if (bytes_read < 0)
     	error("ERROR reading from socket\n");
@@ -22,12 +26,13 @@ void serveFile(int sock)
     char* filename = calloc(1, strlen(buffer) - 4);
     memcpy(filename, buffer + 4, strlen(buffer) - 5);
 
+    /* Open the requested file */
     FILE *fp = fopen(filename, "r");
-    //printf("%s",filename);
-
-    if(fp == NULL)
+    if(fp == NULL)	// handle this in client
     	error("ERROR file not found\n");
 
+    
+    /* Send requested file */
     printf("Sending file %s to client %d\n", filename, sock);
 
     while(1)
@@ -57,9 +62,11 @@ void serveFile(int sock)
 int main(int argc, char *argv[])
 {
     int sockfd, newsockfd, portno, clilen, yes = 1;
+    int childStatus;
+    pid_t pid, killpid;
     char buffer[256];
     struct sockaddr_in serv_addr, cli_addr;
-    int n;
+
     if (argc < 2 || argc > 2) {
         fprintf(stderr,"usage :  %s [port]\n", argv[0]);
         exit(1);
@@ -99,11 +106,11 @@ int main(int argc, char *argv[])
 	        error("ERROR on accept\n");
 	    printf("Client %d connected\n", newsockfd);
 
-	    int pid = fork();
+	    pid = fork();
 
 	    if (pid < 0)
 	    {
-	    	error("ERROR could not fork new process");
+	    	error("ERROR could not fork new process\n");
 	    }
 	    if(pid == 0)
 	    {
@@ -112,10 +119,15 @@ int main(int argc, char *argv[])
 	    }
 	    else
 	    {
-            // shouldn't it wait for children here?
+            // Reap processes periodically
+            while (killpid = waitpid(-1, &childStatus, WNOHANG)>0)
+        	{
+        		printf("Child %d terminated\n", killpid);
+        	}
+	    	
 	    	close(newsockfd);
 	    }
 	}
-
+	//wait();
     return 0; 
 }
