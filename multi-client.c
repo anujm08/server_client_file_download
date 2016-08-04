@@ -45,10 +45,7 @@ void getFile()
             error("ERROR connecting\n");
         printf("A client thread connected to the server\n", sockfd);
 
-        /* temporary get user input */
-        printf("Please enter the message: ");
-        bzero(buffer, 256);
-        fgets(buffer, 255, stdin);
+        strcpy(buffer, "get files/foo0.txt");
 
         /* send user message to server */
         int bytes_sent = write(sockfd, buffer, strlen(buffer));

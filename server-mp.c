@@ -23,8 +23,9 @@ void serveFile(int sock)
     if (bytes_read < 0)
     	error("ERROR reading from socket\n");
     
-    char* filename = calloc(1, strlen(buffer) - 4);
-    memcpy(filename, buffer + 4, strlen(buffer) - 5);
+    /* extract filename */
+    char* filename = calloc(1, strlen(buffer) - 3);
+    strncpy(filename, buffer + 4, strlen(buffer) - 3);
 
     /* Open the requested file */
     FILE *fp = fopen(filename, "r");
@@ -122,7 +123,7 @@ int main(int argc, char *argv[])
             // Reap processes periodically
             while (killpid = waitpid(-1, &childStatus, WNOHANG)>0)
         	{
-        		printf("Child %d terminated\n", killpid);
+        		printf("Child process terminated\n");
         	}
 	    	
 	    	close(newsockfd);
