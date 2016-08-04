@@ -5,6 +5,7 @@
 #include <netdb.h> 
 #include <pthread.h>
 #include <time.h>
+#include <stdlib.h>
 
 static int PORT;
 static int NUM_THREADS;
@@ -12,6 +13,8 @@ static int RUN_TIME;
 static int SLEEP_TIME;
 static int NUM_FILES = 1000;
 static struct hostent *server;
+static char* MODE;
+static char* FIXED_FILE = "files/foo0.txt";
 
 void error(char *msg)
 {
@@ -45,7 +48,15 @@ void getFile()
             error("ERROR connecting\n");
         printf("A client thread connected to the server\n", sockfd);
 
-        strcpy(buffer, "get files/foo0.txt");
+        /* request created based on MODE */
+        if(strcmp(MODE,"fixed") == 0)
+            sprintf(buffer, "get %s", FIXED_FILE);
+        else
+        {
+            
+            int file_num = rand() % NUM_FILES;
+            sprintf(buffer, "get files/foo%d.txt",file_num);
+        }
 
         /* send user message to server */
         int bytes_sent = write(sockfd, buffer, strlen(buffer));
@@ -72,9 +83,8 @@ void getFile()
 
 int main(int argc, char *argv[])
 {
-    // TODO : Handle mode : random or fixed
-    if (argc < 6 || argc > 6) {
-       fprintf(stderr, "usage :  %s [host] [port] [num-threads] [run time] [sleep time]\n", argv[0]);
+    if (argc != 7) {
+       fprintf(stderr, "usage :  %s [host] [port] [num-threads] [run time] [sleep time] [mode]\n", argv[0]);
        exit(0);
     }
 
@@ -83,7 +93,9 @@ int main(int argc, char *argv[])
     NUM_THREADS = atoi(argv[3]);
     RUN_TIME = atoi(argv[4]);
     SLEEP_TIME = atoi(argv[5]);
-    
+    MODE = (char*)malloc(strlen(argv[6]));
+    strncpy(MODE, argv[6],strlen(argv[6]));
+
     // server    
     server = gethostbyname(argv[1]);
     if (server == NULL)

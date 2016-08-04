@@ -24,7 +24,7 @@ void serveFile(int sock)
     	error("ERROR reading from socket\n");
     
     /* extract filename */
-    char* filename = calloc(1, strlen(buffer) - 3);
+    char* filename = (char*)malloc(strlen(buffer) - 3);
     strncpy(filename, buffer + 4, strlen(buffer) - 3);
 
     /* Open the requested file */
@@ -63,8 +63,6 @@ void serveFile(int sock)
 int main(int argc, char *argv[])
 {
     int sockfd, newsockfd, portno, clilen, yes = 1;
-    int childStatus;
-    pid_t pid, killpid;
     char buffer[256];
     struct sockaddr_in serv_addr, cli_addr;
 
@@ -107,7 +105,7 @@ int main(int argc, char *argv[])
 	        error("ERROR on accept\n");
 	    printf("Client %d connected\n", newsockfd);
 
-	    pid = fork();
+	    pid_t pid = fork();
 
 	    if (pid < 0)
 	    {
@@ -121,7 +119,8 @@ int main(int argc, char *argv[])
 	    else
 	    {
             // Reap processes periodically
-            while (killpid = waitpid(-1, &childStatus, WNOHANG)>0)
+            // NULL is for getting argument for status
+            while (waitpid(-1, NULL , WNOHANG)>0)
         	{
         		printf("Child process terminated\n");
         	}
