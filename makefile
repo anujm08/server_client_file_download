@@ -4,7 +4,7 @@ client: multi-client.c
 	gcc -w -o multi-client multi-client.c -lpthread
 
 server: server-mp.c
-	gcc -w -o server-mp server-mp.c
+	gcc -w -o server-mp server-mp.c -lpthread
 
 clean: 
 	rm multi-client

@@ -1,16 +1,25 @@
-/* A simple server in the internet domain using TCP
-   The port number is passed as an argument */
 #include <stdio.h>
 #include <sys/wait.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <pthread.h>
 
 void error(char *msg)
 {
     perror(msg);
     exit(1);
 }
+
+void reapChildren()
+{
+    // wait for any child
+    while (wait(NULL) > 0)
+    {
+        printf("A child process terminated\n");
+    }
+}
+
 
 void serveFile(int sock)
 {
@@ -71,8 +80,11 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    /* create socket */
+    // thread which reaps children
+    pthread_t tid;
+    pthread_create(tid, NULL, reapChildren, NULL);
 
+    /* create socket */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
     if (sockfd <= 0) 
@@ -92,14 +104,12 @@ int main(int argc, char *argv[])
     error("ERROR on binding\n");
     
     /* listen for incoming connection requests */
-
-
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
-    /* accept a new request, create a newsockfd */
 
 	while (1)
 	{
+        /* accept a new request, create a newsockfd */
 	    newsockfd = accept(sockfd, (struct sockaddr*)&cli_addr, &clilen);
 	    if (newsockfd < 0) 
 	        error("ERROR on accept\n");
@@ -118,15 +128,10 @@ int main(int argc, char *argv[])
 	    }
 	    else
 	    {
-            // Reap processes periodically
-            // NULL is for getting argument for status
-            while (waitpid(-1, NULL , WNOHANG)>0)
-        	{
-        		printf("A child process terminated\n");
-        	}
 	    	close(newsockfd);
 	    }
 	}
-	//wait();
+    // join reaper
+    pthread_join(tid, NULL);
     return 0; 
 }
