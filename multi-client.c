@@ -147,8 +147,8 @@ int main(int argc, char *argv[])
         sum_response_time += response_times[i];
     }
 
-    printf("Throughput = %f\n", total_requests/total_time);
-    printf("Average Response Time = %f\n", sum_response_time/total_requests);
+    printf("Throughput = %f req/s\n", total_requests/total_time);
+    printf("Average Response Time = %f sec\n", sum_response_time/total_requests);
     // TODO : deallocate `tid`
     free(requests);
     free(response_times);

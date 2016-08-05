@@ -14,10 +14,16 @@ void error(char *msg)
 void reapChildren()
 {
     // wait for any child
-    while (wait(NULL) > 0)
+    pid_t killpid;
+    while (1)
     {
-        printf("A child process terminated\n");
-    }
+	    while ((killpid = wait(NULL)) > 0)
+	    {
+	        printf("A child process %d terminated\n", killpid);
+	    }
+        sleep(5);
+	}
+    printf("Finished Reaping\n");
 }
 
 
@@ -74,7 +80,7 @@ int main(int argc, char *argv[])
     int sockfd, newsockfd, portno, clilen, yes = 1;
     char buffer[256];
     struct sockaddr_in serv_addr, cli_addr;
-
+    pid_t pid, killpid;
     if (argc < 2 || argc > 2) {
         fprintf(stderr,"usage :  %s [port]\n", argv[0]);
         exit(1);
@@ -115,7 +121,7 @@ int main(int argc, char *argv[])
 	        error("ERROR on accept\n");
 	    printf("Client %d connected\n", newsockfd);
 
-	    pid_t pid = fork();
+	    pid = fork();
 
 	    if (pid < 0)
 	    {
@@ -128,6 +134,10 @@ int main(int argc, char *argv[])
 	    }
 	    else
 	    {
+	    	while ((killpid = waitpid(-1, NULL, WNOHANG)) > 0)
+	    	{
+	    		printf("A child process %d terminated\n", killpid);
+	    	}
 	    	close(newsockfd);
 	    }
 	}
