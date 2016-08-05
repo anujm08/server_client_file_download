@@ -57,7 +57,7 @@ void getFile(int index)
             sprintf(buffer, "get %s", FIXED_FILE);
         else
         {
-            int file_num = rand_r(seed) % NUM_FILES;
+            int file_num = rand_r(&seed) % NUM_FILES;
             sprintf(buffer, "get files/foo%d.txt", file_num);
         }
 
@@ -140,15 +140,15 @@ int main(int argc, char *argv[])
 
     int total_requests = 0;
     double sum_response_time = 0.0;
-    
+
     for(int i = 0; i < NUM_THREADS; i++)
     {
         total_requests += requests[i];
         sum_response_time += response_times[i];
     }
 
-    printf("Throughput = %f", total_requests/total_time);
-    printf("Average Response Time = %f", sum_response_time/total_requests);
+    printf("Throughput = %f\n", total_requests/total_time);
+    printf("Average Response Time = %f\n", sum_response_time/total_requests);
     // TODO : deallocate `tid`
     free(requests);
     free(response_times);

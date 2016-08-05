@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
     // thread which reaps children
     pthread_t tid;
-    pthread_create(tid, NULL, reapChildren, NULL);
+    pthread_create(&tid, NULL, reapChildren, NULL);
 
     /* create socket */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
