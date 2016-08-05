@@ -15,6 +15,8 @@ static int NUM_FILES = 1000;
 static struct hostent *server;
 static char* MODE;
 static char* FIXED_FILE = "files/foo0.txt";
+static int* requests;
+static double* response_times;
 
 void error(char *msg)
 {
@@ -22,12 +24,14 @@ void error(char *msg)
     exit(0);
 }
 
-void getFile(int seed)
+void getFile(int index)
 {
     int sockfd, yes = 1;
     char buffer[256];
     struct sockaddr_in serv_addr;
+
     time_t init = time(NULL);
+    int seed = index * time(NULL);
 
     while (difftime(time(NULL), init) < RUN_TIME)
     {
@@ -63,6 +67,9 @@ void getFile(int seed)
             error("ERROR writing to socket\n");
         bzero(buffer, 256);
 
+        struct timeval start, end;
+        gettimeofday(&start, NULL);
+
         while(1)
         {
             int bytes_recv = recv(sockfd, buffer, sizeof(buffer), 0);
@@ -71,8 +78,16 @@ void getFile(int seed)
                 error("ERROR reading from socket\n");
             if (bytes_recv == 0)
             {
+                // TODO : check that atleast some bytes are received
+                gettimeofday(&end, NULL);
                 printf("File received\n");
+
+                requests[index]++;
+                response_times[index] += (double)(end.tv_usec - start.tv_usec)/1e6 + 
+                                         (double)(end.tv_sec - start.tv_sec);
+
                 break;
+
             }
         }
 
@@ -87,15 +102,21 @@ int main(int argc, char *argv[])
        exit(0);
     }
 
-    int seed = time(NULL);
+    //int seed = time(NULL);
+    struct timeval start_time, end_time;
+    gettimeofday(&start_time, NULL);
 
-    // TODO : sanity checks
+    // TODO : sanity checks and error handling for malloc
     PORT = atoi(argv[2]);
     NUM_THREADS = atoi(argv[3]);
     RUN_TIME = atoi(argv[4]);
     SLEEP_TIME = atoi(argv[5]);
     MODE = (char*)malloc(strlen(argv[6]));
     strncpy(MODE, argv[6], strlen(argv[6]));
+
+    // calloc initialises all bits to 0
+    requests = calloc(NUM_THREADS, sizeof(int));
+    response_times = calloc(NUM_THREADS, sizeof(double));
 
     // server    
     server = gethostbyname(argv[1]);
@@ -106,13 +127,30 @@ int main(int argc, char *argv[])
 
     for(int i = 0; i < NUM_THREADS; i++) 
         // second NULL is for giving arguments to getFile
-        pthread_create(&tid[i], NULL, getFile, seed*i);
+        pthread_create(&tid[i], NULL, getFile, i);
 
     for(int i = 0; i < NUM_THREADS; i++) 
         //change NULL for getting back return values
         pthread_join(tid[i], NULL);
 
-    // TODO : deallocate `tid`
+    gettimeofday(&end_time, NULL);
 
+    double total_time = (double)(end_time.tv_usec - start_time.tv_usec)/1e6 + 
+                        (double)(end_time.tv_sec - start_time.tv_sec);
+
+    int total_requests = 0;
+    double sum_response_time = 0.0;
+    
+    for(int i = 0; i < NUM_THREADS; i++)
+    {
+        total_requests += requests[i];
+        sum_response_time += response_times[i];
+    }
+
+    printf("Throughput = %f", total_requests/total_time);
+    printf("Average Response Time = %f", sum_response_time/total_requests);
+    // TODO : deallocate `tid`
+    free(requests);
+    free(response_times);
     return 0;
 }
