@@ -70,24 +70,33 @@ void getFile(int index)
         struct timeval start, end;
         gettimeofday(&start, NULL);
 
+        int received = 0;
         while(1)
         {
             int bytes_recv = recv(sockfd, buffer, sizeof(buffer), 0);
             
             if (bytes_recv < 0) 
                 error("ERROR reading from socket\n");
-            if (bytes_recv == 0)
+            else if (bytes_recv == 0)
             {
-                // TODO : check that atleast some bytes are received
-                gettimeofday(&end, NULL);
-                printf("File received\n");
+                if(received)
+                {
+                    gettimeofday(&end, NULL);
+                    printf("File received\n");
 
-                requests[index]++;
-                response_times[index] += (double)(end.tv_usec - start.tv_usec)/1e6 + 
+                    requests[index]++;
+                    response_times[index] += (double)(end.tv_usec - start.tv_usec)/1e6 + 
                                          (double)(end.tv_sec - start.tv_sec);
-
+                }
+                else
+                {
+                    printf("File not found on server\n");
+                }
                 break;
-
+            }
+            else
+            {
+                received = 1;
             }
         }
 
@@ -149,8 +158,10 @@ int main(int argc, char *argv[])
 
     printf("Throughput = %f req/s\n", total_requests/total_time);
     printf("Average Response Time = %f sec\n", sum_response_time/total_requests);
+    
     // TODO : deallocate `tid`
     free(requests);
     free(response_times);
+    
     return 0;
 }
