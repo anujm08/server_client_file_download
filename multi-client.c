@@ -24,6 +24,11 @@ void error(char *msg)
     exit(0);
 }
 
+// every client runs this function
+// creates socket, requests file, sleeps and repeats
+// till RUN_TIME amount of seconds
+// `index` parameter is for giving different seeds to different
+// threads for the random file requesting
 void getFile(int index)
 {
     int sockfd, yes = 1;
@@ -33,6 +38,7 @@ void getFile(int index)
     time_t init = time(NULL);
     int seed = index * time(NULL);
 
+    // while execution time < RUN_TIME
     while (difftime(time(NULL), init) < RUN_TIME)
     {
         /* create socket, get sockfd handle */
@@ -73,6 +79,7 @@ void getFile(int index)
         struct timeval start, end;
         gettimeofday(&start, NULL);
 
+        // a check to ensure if the server actually sent the data or not
         int received = 0;
         while(1)
         {
@@ -87,6 +94,7 @@ void getFile(int index)
                     gettimeofday(&end, NULL);
                     printf("File received by client %d\n", index);
 
+                    // response time calculation 
                     requests[index]++;
                     response_times[index] += (double)(end.tv_usec - start.tv_usec)/1e6 + 
                                          (double)(end.tv_sec - start.tv_sec);
@@ -102,7 +110,9 @@ void getFile(int index)
                 received = 1;
             }
         }
+        // close the socket
         close(sockfd);
+        // sleep for designated time
         sleep(SLEEP_TIME);
     }
 }
@@ -135,16 +145,19 @@ int main(int argc, char *argv[])
 
     pthread_t *tid = malloc(NUM_THREADS * sizeof(pthread_t));
 
+    // create NUM_THREADS threads
     for(int i = 0; i < NUM_THREADS; i++) 
         // second NULL is for giving arguments to getFile
         pthread_create(&tid[i], NULL, getFile, i);
 
+    // wait for all NUM_THREADS threads to finish
     for(int i = 0; i < NUM_THREADS; i++) 
         //change NULL for getting back return values
         pthread_join(tid[i], NULL);
 
     gettimeofday(&end_time, NULL);
 
+    // throughput and response time calculations
     double total_time = (double)(end_time.tv_usec - start_time.tv_usec)/1e6 + 
                         (double)(end_time.tv_sec - start_time.tv_sec);
 
@@ -159,7 +172,8 @@ int main(int argc, char *argv[])
 
     printf("Throughput = %f req/s\n", total_requests/total_time);
     printf("Average Response Time = %f sec\n", sum_response_time/total_requests);
-    
+        
+    // memory deallocation
     free(tid);
     free(requests);
     free(response_times);

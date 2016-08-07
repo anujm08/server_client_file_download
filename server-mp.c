@@ -13,6 +13,8 @@ void error(char *msg)
     exit(1);
 }
 
+// a seperate function, which is executed by a thread
+// whose job is to reap children of this process
 void reapChildren()
 {
     // wait for any child
@@ -27,7 +29,7 @@ void reapChildren()
 	}
 }
 
-
+// function which server calls to serve the requsted file to the client
 void serveFile(int sock)
 {
 	char buffer[BUFFER_SIZE];
@@ -128,8 +130,10 @@ int main(int argc, char *argv[])
 	    	error("ERROR could not fork new process\n");
 	    }
 	    if (pid == 0)
-	    {
+	    {  
+            // close the current socket (inherited from the parent)
 	    	close(sockfd);
+            // serve file on the newsocket created for the client connection
 	    	serveFile(newsockfd);
 	    }
 	    else
@@ -138,10 +142,11 @@ int main(int argc, char *argv[])
 	    	{
 	    		printf("A child process %d terminated\n", killpid);
 	    	}
+            // the parent doesn't need the new socket, hence closed
 	    	close(newsockfd);
 	    }
 	}
-    // join reaper
+    // join reaper thread
     pthread_join(tid, NULL);
     return 0; 
 }
