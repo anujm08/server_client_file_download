@@ -45,7 +45,7 @@ void serveFile(int sock)
     strncpy(filename, buffer + 4, strlen(buffer) - 3);
 
     /* Open the requested file */
-    FILE *fp = fopen(filename, "r");
+    FILE *fp = fopen(filename, "rb");
     if(fp == NULL)	// handle this in client
     	error("ERROR file not found");
 
