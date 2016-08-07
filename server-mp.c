@@ -5,6 +5,8 @@
 #include <netinet/in.h>
 #include <pthread.h>
 
+int BUFFER_SIZE = 1024;
+
 void error(char *msg)
 {
     perror(msg);
@@ -23,20 +25,18 @@ void reapChildren()
 	    }
         sleep(5);
 	}
-    printf("Finished Reaping\n");
 }
 
 
 void serveFile(int sock)
 {
-	char buffer[256];
-	//TODO : change the block size of reading
-	bzero(buffer, 256); 
+	char buffer[BUFFER_SIZE];
+	bzero(buffer, BUFFER_SIZE); 
     
 	/* Read file requesst from client */
-    int bytes_read = read(sock, buffer, 255);
+    int bytes_read = read(sock, buffer, sizeof(buffer));
     if (bytes_read < 0)
-    	error("ERROR reading from socket\n");
+    	error("ERROR reading from socket");
     
     /* extract filename */
     char* filename = (char*)malloc(strlen(buffer) - 3);
@@ -45,11 +45,11 @@ void serveFile(int sock)
     /* Open the requested file */
     FILE *fp = fopen(filename, "r");
     if(fp == NULL)	// handle this in client
-    	error("ERROR file not found\n");
+    	error("ERROR file not found");
 
     
     /* Send requested file */
-    printf("Sending file %s to client %d\n", filename, sock);
+    printf("Sending file %s to client\n", filename);
 
     while(1)
     {
@@ -58,17 +58,17 @@ void serveFile(int sock)
     	{
     		int bytes_sent = send(sock, buffer, bytes_read, 0);
     		if (bytes_sent < bytes_read) 
-    			error("ERROR writing to socket\n");
+    			error("ERROR writing to socket");
     	}
     	if(bytes_read == 0)
     	{
-    		printf("File %s successfully sent to client %d\n",filename,sock);
+    		printf("File %s successfully sent to client\n",filename);
     		fclose(fp);
     		break;
     	}
     	if(bytes_read < 0)
     	{
-    		error("ERROR reading from file\n");
+    		error("ERROR reading from file");
     	}
     }
     close(sock);
@@ -78,11 +78,11 @@ void serveFile(int sock)
 int main(int argc, char *argv[])
 {
     int sockfd, newsockfd, portno, clilen, yes = 1;
-    char buffer[256];
+    char buffer[BUFFER_SIZE];
     struct sockaddr_in serv_addr, cli_addr;
     pid_t pid, killpid;
     if (argc < 2 || argc > 2) {
-        fprintf(stderr,"usage :  %s [port]\n", argv[0]);
+        printf(stderr,"usage :  %s [port]\n", argv[0]);
         exit(1);
     }
 
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
     error("ERROR on binding\n");
     
     /* listen for incoming connection requests */
-    listen(sockfd, 5);
+    listen(sockfd, 100);
     clilen = sizeof(cli_addr);
 
 	while (1)
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 	    newsockfd = accept(sockfd, (struct sockaddr*)&cli_addr, &clilen);
 	    if (newsockfd < 0) 
 	        error("ERROR on accept\n");
-	    printf("Client %d connected\n", newsockfd);
+	    printf("New client connected\n");
 
 	    pid = fork();
 

@@ -11,7 +11,7 @@ static int PORT;
 static int NUM_THREADS;
 static int RUN_TIME;
 static int SLEEP_TIME;
-static int NUM_FILES = 1000;
+static int NUM_FILES = 5000;
 static struct hostent *server;
 static char* MODE;
 static char* FIXED_FILE = "files/foo0.txt";
@@ -38,8 +38,11 @@ void getFile(int index)
         /* create socket, get sockfd handle */
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
         setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
-        if (sockfd <= 0) 
-            error("ERROR opening socket\n");
+        if (sockfd < 0) 
+        {
+            printf("Sockfd %d\n", sockfd);
+            error("ERROR opening socket");
+        }
 
         bzero((char*)&serv_addr, sizeof(serv_addr));
         serv_addr.sin_family = AF_INET;
@@ -49,8 +52,8 @@ void getFile(int index)
 
         /* connect to server */
         if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) 
-            error("ERROR connecting\n");
-        printf("A client thread connected to the server\n", sockfd);
+            error("ERROR connecting");
+        printf("Client thread %d connected to the server\n", index);
 
         /* request created based on MODE */
         if(strcmp(MODE,"fixed") == 0)
@@ -64,7 +67,7 @@ void getFile(int index)
         /* send user message to server */
         int bytes_sent = write(sockfd, buffer, strlen(buffer));
         if (bytes_sent < 0) 
-            error("ERROR writing to socket\n");
+            error("ERROR writing to socket");
         bzero(buffer, 256);
 
         struct timeval start, end;
@@ -76,13 +79,13 @@ void getFile(int index)
             int bytes_recv = recv(sockfd, buffer, sizeof(buffer), 0);
             
             if (bytes_recv < 0) 
-                error("ERROR reading from socket\n");
+                error("ERROR reading from socket");
             else if (bytes_recv == 0)
             {
                 if(received)
                 {
                     gettimeofday(&end, NULL);
-                    printf("File received\n");
+                    printf("File received by client %d\n", index);
 
                     requests[index]++;
                     response_times[index] += (double)(end.tv_usec - start.tv_usec)/1e6 + 
@@ -90,7 +93,7 @@ void getFile(int index)
                 }
                 else
                 {
-                    printf("File not found on server\n");
+                    printf("File requested by client %d not found on server\n", index);
                 }
                 break;
             }
@@ -99,7 +102,7 @@ void getFile(int index)
                 received = 1;
             }
         }
-
+        close(sockfd);
         sleep(SLEEP_TIME);
     }
 }
@@ -111,11 +114,9 @@ int main(int argc, char *argv[])
        exit(0);
     }
 
-    //int seed = time(NULL);
     struct timeval start_time, end_time;
     gettimeofday(&start_time, NULL);
 
-    // TODO : sanity checks and error handling for malloc
     PORT = atoi(argv[2]);
     NUM_THREADS = atoi(argv[3]);
     RUN_TIME = atoi(argv[4]);
@@ -130,7 +131,7 @@ int main(int argc, char *argv[])
     // server    
     server = gethostbyname(argv[1]);
     if (server == NULL)
-        error("ERROR no such host\n");
+        error("ERROR no such host");
 
     pthread_t *tid = malloc(NUM_THREADS * sizeof(pthread_t));
 
@@ -159,7 +160,7 @@ int main(int argc, char *argv[])
     printf("Throughput = %f req/s\n", total_requests/total_time);
     printf("Average Response Time = %f sec\n", sum_response_time/total_requests);
     
-    // TODO : deallocate `tid`
+    free(tid);
     free(requests);
     free(response_times);
     
